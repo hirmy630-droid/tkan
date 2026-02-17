@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KYOWA ROOF 計算ツール</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --ios-bg: #000000;
+            --ios-card: #1c1c1e;
+            --ios-input: #2c2c2e;
+            --ios-border: #3a3a3c;
+            --ios-blue: #0a84ff;
+            --ios-indigo: #5e5ce6;
+            --ios-green: #30d158;
+            --ios-orange: #ff9f0a;
+            --ios-secondary: #8e8e93; 
+        }
+
+        body {
+            background-color: var(--ios-bg);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+            margin: 0;
+            padding: 10px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            touch-action: pan-y;
+        }
+
+        /* タブメニュー */
+        .tab-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 12px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .tab-container {
+            display: flex;
+            background: linear-gradient(180deg, #161618 0%, #2c2c2e 100%);
+            padding: 3px;
+            border-radius: 12px;
+            width: 95%;
+            max-width: 400px;
+            border: 1px solid #38383a;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: #d1d1d6;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 9px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tab-button.active {
+            background: linear-gradient(180deg, #636366 0%, #48484a 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+
+        /* カード */
+        .calc-card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--ios-card);
+            border-radius: 24px;
+            padding: 20px;
+            margin-top: 10px;
+            display: none; 
+            flex-direction: column;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .calc-card.active { display: flex; }
+
+        /* ラベル */
+        .label-outside {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            margin-left: 8px;
+            transition: color 0.3s ease;
+        }
+
+        /* 入力ボックス */
+        .input-box {
+            background: #121214; 
+            border-radius: 18px;
+            border: 1.5px solid #444446;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-box.h-main { height: 76px; border-radius: 22px; }
+        .input-box.h-sub { height: 60px; }
+
+        /* アクセントボーダー */
+        #panel-elbow .input-box-main { border: 3px solid var(--ios-indigo); }
+        #panel-cheese .input-box-main { border: 3px solid var(--ios-blue); }
+
+        .input-ios {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-weight: 900;
+            outline: none;
+            padding: 12px;
+            text-align: center;
+            appearance: none;
+        }
+
+        .input-ios.is-placeholder { font-weight: 400 !important; color: #d1d1d6 !important; }
+
+        /* 結果ボックス */
+        .result-box-ios {
+            border-radius: 20px;
+            height: 104px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .internal-label { font-size: 15px; font-weight: 700; margin-bottom: 2px; letter-spacing: 0.05em; }
+        .result-value-container { display: flex; align-items: baseline; font-size: 40px; }
+
+        /* 保存ボタン */
+        .btn-save-orange {
+            width: 100%;
+            height: 58px;
+            background: var(--ios-orange);
+            color: white;
+            border-radius: 18px;
+            font-weight: 500; /* 細字(標準)に変更 */
+            font-size: 18px;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .btn-save-orange:active { transform: scale(0.97); }
+        .btn-save-orange:disabled { background: #2c2c2e !important; color: #48484a; box-shadow: none; }
+
+        /* 履歴リスト（コンパクト化） */
+        .history-list { display: flex; flex-direction: column; gap: 4px; }
+        .history-item {
+            background: var(--ios-input);
+            border-radius: 14px;
+            padding: 4px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #3a3c3e;
+        }
+        .history-info { font-size: 15px; color: #d1d1d6; display: flex; align-items: center; gap: 6px; }
+        .history-size-tag {
+            background: rgba(255, 159, 10, 0.1); 
+            padding: 1px 6px; 
+            border-radius: 6px; 
+            font-weight: 700; 
+            color: #ffffff; 
+            border: 1px solid var(--ios-orange);
+            font-size: 12px;
+        }
+        .btn-save-mark { color: var(--ios-orange); font-size: 18px; font-weight: bold; margin-right: 4px; }
+        .history-result { font-size: 19px; font-weight: 900; }
+        .history-delete { color: #ff453a; cursor: pointer; font-size: 28px; font-weight: bold; margin-left: 12px; padding: 0px 8px; line-height: 1; }
+
+        /* クリアボタン（円形） */
+        .clear-btn-circle {
+            width: 34px; height: 34px; background: #3a3a3c; color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; margin-right: 12px; cursor: pointer;
+        }
+
+        /* 確認モーダル */
+        #confirmModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); 
+            z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-content {
+            background: #2c2c2e; border-radius: 14px; width: 100%; max-width: 270px; 
+            text-align: center; overflow: hidden; border: 1px solid #444446;
+        }
+        .modal-btn {
+            flex: 1; padding: 12px; font-size: 17px; border: none; background: transparent; cursor: pointer;
+        }
+
+        .footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--ios-secondary); letter-spacing: 0.05em; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div id="confirmModal">
+        <div class="modal-content">
+            <div style="padding: 20px 16px;">
+                <div class="text-white font-semibold mb-1 text-lg">履歴の削除</div>
+                <div id="modalBody" class="text-gray-400 text-sm">履歴を完全に消去しますか？</div>
+            </div>
+            <div style="display: flex; border-top: 0.5px solid #3a3a3c;">
+                <button onclick="hideConfirmModal()" class="modal-btn" style="color: #0a84ff; border-right: 0.5px solid #3a3a3c;">キャンセル</button>
+                <button id="modalConfirmBtn" class="modal-btn" style="color: #ff453a; font-weight: 600;">削除する</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-wrapper">
+        <div class="tab-container">
+            <button id="tab-elbow" class="tab-button active" onclick="switchTab('elbow')">90°エルボ</button>
+            <button id="tab-cheese" class="tab-button" onclick="switchTab('cheese')">変形チーズ管</button>
+        </div>
+    </div>
+
+    <!-- 1. 90°エルボ -->
+    <div id="panel-elbow" class="calc-card active">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold">90°エルボ 計算</h1>
+            <p class="text-xs text-[#d1d1d6] tracking-widest mt-1 font-bold">KYOWA ROOF</p>
+            <div class="mt-4">
+                <div class="result-box-ios bg-[#5e5ce6]">
+                    <div class="internal-label" style="color:#bfbdf3">切断寸法</div>
+                    <div class="result-value-container">
+                        <span id="e-result">---</span><span class="text-lg ml-2 opacity-80">mm</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="flex gap-3">
+                <div class="flex-1">
+                    <label class="label-outside text-[#5e5ce6]">サイズ</label>
+                    <div class="input-box h-sub">
+                        <select id="e-size" class="input-ios text-2xl cursor-pointer">
+                            <option value="75">75</option>
+                            <option value="100" selected>100</option>
+                            <option value="125">125</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <label class="label-outside text-[#5e5ce6]">重寸法</label>
+                    <div class="input-box h-sub">
+                        <div class="w-full text-center text-2xl font-bold text-[#aeaeb2]">
+                            <span id="e-d-display">--</span><span class="text-sm ml-1">mm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label class="label-outside text-[#5e5ce6]">芯〜芯 (mm)</label>
+                <div class="input-box h-main input-box-main">
+                    <input id="e-input" class="input-ios text-4xl" type="text" inputmode="decimal" placeholder="0">
+                    <div id="e-clear" class="clear-btn-circle hidden">×</div>
+                </div>
+            </div>
+            <button id="e-save" class="btn-save-orange" disabled>★履歴に保存</button>
+        </div>
+
+        <div class="mt-8 border-t border-gray-800 pt-4">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm font-bold text-gray-500">保存された履歴</span>
+                <button onclick="askClearHistory('elbow')" class="text-sm text-[#ff453a] font-bold">履歴をクリア</button>
+            </div>
+            <div id="e-history-list" class="history-list"></div>
+        </div>
+        <div class="footer">★：ボタン保存（無制限） / 自動保存（5件）</div>
+    </div>
+
+    <!-- 2. 変形チーズ管 -->
+    <div id="panel-cheese" class="calc-card">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold">変形チーズ管</h1>
+            <p class="text-xs text-[#d1d1d6] tracking-widest mt-1 font-bold">KYOWA ROOF</p>
+            <div class="mt-4">
+                <div class="result-box-ios bg-[#0a84ff]">
+                    <div class="internal-label" style="color:rgba(255,255,255,0.8)">切断寸法</div>
+                    <div class="result-value-container">
+                        <span id="c-result">---</span><span class="text-lg ml-2 opacity-80">mm</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="flex gap-3">
+                <div class="flex-1">
+                    <label class="label-outside text-[#0a84ff]">サイズ</label>
+                    <div class="input-box h-sub">
+                        <select id="c-size" class="input-ios cursor-pointer is-placeholder" style="font-size: 23px !important;">
+                            <option value="">選択</option>
+                            <option value="10075">100×75</option>
+                            <option value="12575">125×75</option>
+                            <option value="125100">125×100</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <label class="label-outside text-[#0a84ff]">重寸法</label>
+                    <div class="input-box h-sub">
+                        <div class="w-full text-center font-bold text-[#aeaeb2]" style="font-size: 23px !important;">
+                            <span id="c-c6-display">-</span><span class="text-sm ml-1">mm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label class="label-outside text-[#0a84ff]">芯〜芯 (mm)</label>
+                <div class="input-box h-main input-box-main">
+                    <input id="c-input" class="input-ios text-4xl" type="text" inputmode="decimal" placeholder="0">
+                    <div id="c-clear" class="clear-btn-circle hidden">×</div>
+                </div>
+            </div>
+            <button id="c-save" class="btn-save-orange" disabled>★履歴に保存</button>
+        </div>
+
+        <div class="mt-8 border-t border-gray-800 pt-4">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm font-bold text-gray-500">保存された履歴</span>
+                <button onclick="askClearHistory('cheese')" class="text-sm text-[#ff453a] font-bold">履歴をクリア</button>
+            </div>
+            <div id="c-history-list" class="history-list"></div>
+        </div>
+        <div class="footer">★：ボタン保存（無制限） / 自動保存（5件）</div>
+    </div>
+
+    <script>
+        const eStorageKey = 'elbow_90_history_final_v5';
+        const cStorageKey = 'pipe_calc_history_final_v6';
+        let eHistories = JSON.parse(localStorage.getItem(eStorageKey)) || [];
+        let cHistories = JSON.parse(localStorage.getItem(cStorageKey)) || [];
+        let currentTabType = 'elbow';
+        let lastSavedTS = 0;
+
+        // タブ切り替え
+        function switchTab(type) {
+            currentTabType = type;
+            document.querySelectorAll('.calc-card').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.getElementById(`panel-${type}`).classList.add('active');
+            document.getElementById(`tab-${type}`).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // スワイプ
+        let startX = 0, startY = 0;
+        window.addEventListener('touchstart', e => { startX = e.touches[0].screenX; startY = e.touches[0].screenY; }, {passive:true});
+        window.addEventListener('touchend', e => {
+            const diffX = startX - e.changedTouches[0].screenX;
+            const diffY = Math.abs(startY - e.changedTouches[0].screenY);
+            if (diffY > 60 || Math.abs(diffX) < 80) return;
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') return;
+            if (diffX > 0 && currentTabType === 'elbow') switchTab('cheese');
+            else if (diffX < 0 && currentTabType === 'cheese') switchTab('elbow');
+        }, {passive:true});
+
+        // モーダル
+        let deleteTargetType = '';
+        function askClearHistory(type) {
+            deleteTargetType = type;
+            document.getElementById('modalBody').innerText = `${type === 'elbow' ? '90°エルボ' : '変形チーズ管'}の履歴を完全に消去しますか？`;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+        function hideConfirmModal() { document.getElementById('confirmModal').style.display = 'none'; }
+        document.getElementById('modalConfirmBtn').onclick = () => {
+            if (deleteTargetType === 'elbow') { eHistories = []; localStorage.removeItem(eStorageKey); renderElbowHist(); }
+            else { cHistories = []; localStorage.removeItem(cStorageKey); renderCheeseHist(); }
+            hideConfirmModal();
+        };
+
+        function formatNum(num) {
+            if (isNaN(num) || num === null) return "---";
+            const parts = num.toString().split(".");
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            return parts.join(".");
+        }
+        function unformat(str) { return str.replace(/,/g, ""); }
+
+        // --- エルボ計算 ---
+        const eData = { 75: {d:30, e:88}, 100: {d:40, e:112}, 125: {d:50, e:140} };
+        const eInput = document.getElementById('e-input'), eSize = document.getElementById('e-size'), eResult = document.getElementById('e-result'), eSaveBtn = document.getElementById('e-save');
+
+        function calcElbow() {
+            const { d, e } = eData[eSize.value];
+            document.getElementById('e-d-display').textContent = d;
+            let val = unformat(eInput.value).replace(/[^\d.]/g, "");
+            if (val !== "") {
+                const parts = val.split(".");
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                eInput.value = parts.join(".");
+            }
+            document.getElementById('e-clear').classList.toggle('hidden', eInput.value === "");
+            const c = parseFloat(val);
+            if (!isNaN(c)) {
+                const f = c - ((e * 2) - (d * 2));
+                eResult.textContent = formatNum(Math.round(f * 10) / 10);
+                eSaveBtn.disabled = false;
+            } else { eResult.textContent = "---"; eSaveBtn.disabled = true; }
+        }
+
+        function renderElbowHist() {
+            const list = document.getElementById('e-history-list');
+            list.innerHTML = eHistories.length ? "" : '<div class="text-center text-xs py-4 text-[#d1d1d6]">履歴はありません</div>';
+            [...eHistories].reverse().forEach((h, i) => {
+                const realIdx = eHistories.length - 1 - i;
+                const div = document.createElement('div');
+                div.className = "history-item";
+                div.innerHTML = `<div class="history-info">${h.method === 'button' ? '<span class="btn-save-mark">★</span>' : ''}<span class="history-size-tag">${h.size}</span><span>芯: ${h.input}</span></div>
+                                 <div class="flex items-center"><span class="history-result">${h.result}</span><span class="history-delete" onclick="deleteElbowHist(${realIdx})">×</span></div>`;
+                list.appendChild(div);
+            });
+        }
+        window.deleteElbowHist = idx => { eHistories.splice(idx, 1); localStorage.setItem(eStorageKey, JSON.stringify(eHistories)); renderElbowHist(); };
+
+        // --- チーズ管計算 ---
+        const cData = { "10075": {c2:130, c6:30}, "12575": {c2:144, c6:30}, "125100": {c2:157, c6:40} };
+        const cInput = document.getElementById('c-input'), cSize = document.getElementById('c-size'), cResult = document.getElementById('c-result'), cSaveBtn = document.getElementById('c-save');
+
+        function calcCheese() {
+            const key = cSize.value;
+            cSize.classList.toggle('is-placeholder', !key);
+            let val = unformat(cInput.value).replace(/[^\d.]/g, "");
+            if (val !== "") {
+                const parts = val.split(".");
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                cInput.value = parts.join(".");
+            }
+            document.getElementById('c-clear').classList.toggle('hidden', cInput.value === "");
+            if (key) {
+                const data = cData[key];
+                document.getElementById('c-c6-display').textContent = data.c6;
+                const cVal = parseFloat(val);
+                if (!isNaN(cVal)) {
+                    cResult.textContent = formatNum(Math.round((cVal - data.c2) * 10) / 10);
+                    cSaveBtn.disabled = false;
+                } else { cResult.textContent = "---"; cSaveBtn.disabled = true; }
+            } else { document.getElementById('c-c6-display').textContent = "-"; cResult.textContent = "---"; cSaveBtn.disabled = true; }
+        }
+
+        function renderCheeseHist() {
+            const list = document.getElementById('c-history-list');
+            list.innerHTML = cHistories.length ? "" : '<div class="text-center text-xs py-4 text-[#d1d1d6]">履歴はありません</div>';
+            [...cHistories].reverse().forEach((h, i) => {
+                const realIdx = cHistories.length - 1 - i;
+                const div = document.createElement('div');
+                div.className = "history-item";
+                div.innerHTML = `<div class="history-info">${h.method === 'button' ? '<span class="btn-save-mark">★</span>' : ''}<span class="history-size-tag">${h.size}</span><span>芯: ${h.input}</span></div>
+                                 <div class="flex items-center"><span class="history-result">${h.result}</span><span class="history-delete" onclick="deleteCheeseHist(${realIdx})">×</span></div>`;
+                list.appendChild(div);
+            });
+        }
+        window.deleteCheeseHist = idx => { cHistories.splice(idx, 1); localStorage.setItem(cStorageKey, JSON.stringify(cHistories)); renderCheeseHist(); };
+
+        // 共通保存ロジック
+        function saveToHistory(type, method = 'enter') {
+            const now = Date.now();
+            if (now - lastSavedTS < 300) return;
+            const isElbow = type === 'elbow';
+            const hist = isElbow ? eHistories : cHistories;
+            const input = isElbow ? eInput : cInput;
+            const res = isElbow ? eResult : cResult;
+            const sz = isElbow ? eSize.value : (cSize.options[cSize.selectedIndex].text);
+            const btn = isElbow ? eSaveBtn : cSaveBtn;
+
+            if (method === 'enter') {
+                const autoItems = hist.filter(h => h.method === 'enter');
+                if (autoItems.length >= 5) {
+                    const oldestAutoIdx = hist.findIndex(h => h.method === 'enter');
+                    if (oldestAutoIdx !== -1) hist.splice(oldestAutoIdx, 1);
+                }
+            }
+            hist.push({ size: sz, input: input.value, result: res.textContent, method: method, id: now });
+            localStorage.setItem(isElbow ? eStorageKey : cStorageKey, JSON.stringify(hist));
+            isElbow ? renderElbowHist() : renderCheeseHist();
+            lastSavedTS = now;
+            btn.style.background = "#248a3d";
+            setTimeout(() => btn.style.background = "", 800);
+        }
+
+        // イベント設定
+        [eInput, cInput].forEach(el => {
+            el.addEventListener('focus', function() { setTimeout(() => this.setSelectionRange(0, 9999), 50); });
+            el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const type = el.id.startsWith('e') ? 'elbow' : 'cheese'; const btn = type==='elbow'?eSaveBtn:cSaveBtn; if(!btn.disabled) { saveToHistory(type, 'enter'); el.blur(); } } });
+            el.addEventListener('blur', () => { const type = el.id.startsWith('e') ? 'elbow' : 'cheese'; const btn = type==='elbow'?eSaveBtn:cSaveBtn; if(!btn.disabled && el.value !== "" && el.value !== "0") { saveToHistory(type, 'enter'); } });
+            el.oninput = el.id.startsWith('e') ? calcElbow : calcCheese;
+        });
+
+        [eSize, cSize].forEach(el => {
+            el.onchange = () => { (el.id.startsWith('e') ? calcElbow() : calcCheese()); setTimeout(() => (el.id.startsWith('e')?eInput:cInput).focus(), 100); };
+        });
+
+        eSaveBtn.onclick = () => saveToHistory('elbow', 'button');
+        cSaveBtn.onclick = () => saveToHistory('cheese', 'button');
+        document.getElementById('e-clear').onclick = () => { eInput.value = ""; calcElbow(); eInput.focus(); };
+        document.getElementById('c-clear').onclick = () => { cInput.value = ""; calcCheese(); cInput.focus(); };
+
+        // 外部タップでキーボードを閉じる
+        document.addEventListener('touchstart', e => {
+            if (!['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName)) if (document.activeElement) document.activeElement.blur();
+        }, {passive:true});
+
+        window.onload = () => { calcElbow(); calcCheese(); renderElbowHist(); renderCheeseHist(); };
+    </script>
+</body>
+</html>
