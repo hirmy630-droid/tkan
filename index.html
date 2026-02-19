@@ -46,13 +46,13 @@
 
         .tab-container {
             display: flex;
-            background: linear-gradient(180deg, #161618 0%, #2c2c2e 100%);
-            padding: 3px;
-            border-radius: 12px;
-            width: 95%;
-            max-width: 500px;
-            border: 1px solid #38383a;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05);
+            background: var(--ios-card); /* 画面の背景色と統一 */
+            padding: 4px;
+            border-radius: 18px;
+            width: 100%;
+            max-width: 420px; /* 画面の横幅と統一 */
+            border: 1px solid var(--ios-border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
 
         .tab-button {
@@ -64,7 +64,7 @@
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
-            border-radius: 9px;
+            border-radius: 14px;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap;
         }
@@ -201,17 +201,18 @@
             font-size: 20px; margin-right: 12px; cursor: pointer;
         }
 
-        /* 3Dボタン風 */
+        /* 3Dボタン風（強化版） */
         .btn-3d {
             position: relative;
             transition: all 0.1s;
-            border-bottom: 4px solid #1a1a1a;
+            border-bottom: 6px solid #1a1a1a;
             user-select: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
         .btn-3d:active {
-            transform: translateY(2px);
-            border-bottom-width: 1px;
-            margin-bottom: 2px;
+            transform: translateY(4px);
+            border-bottom-width: 2px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
         /* 確認モーダル */
@@ -428,7 +429,7 @@
             </div>
 
             <div class="flex justify-center mt-4">
-                <button id="d-clear" class="btn-3d w-1/2 bg-gray-600 border-gray-900 text-gray-200 font-bold py-3 rounded-xl text-lg">
+                <button id="d-clear" class="btn-3d w-1/2 bg-gray-700 border-[#1a1a1a] text-white font-bold py-3 rounded-xl text-lg">
                     クリア
                 </button>
             </div>
@@ -445,19 +446,18 @@
         const tabList = ['elbow', 'cheese', 'dist'];
         let lastSavedTS = 0;
 
-        // タブ切り替え
+        // タブ切り替え（自動フォーカスを無効化）
         function switchTab(type) {
             currentTabType = type;
             document.querySelectorAll('.calc-card').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
             document.getElementById(`panel-${type}`).classList.add('active');
             document.getElementById(`tab-${type}`).classList.add('active');
-            window.scrollTo(0, 0);
             
-            // フォーカス移動
-            if (type === 'elbow') document.getElementById('e-input').focus();
-            if (type === 'cheese') document.getElementById('c-input').focus();
-            if (type === 'dist') document.getElementById('d-inputB').focus();
+            // キーボードが開いている場合は閉じる
+            if (document.activeElement) document.activeElement.blur();
+            
+            window.scrollTo(0, 0);
         }
 
         // スワイプ（3タブ対応）
@@ -633,7 +633,6 @@
 
             if (method === 'enter') {
                 const autoItems = hist.filter(h => h.method === 'enter');
-                // 自動保存を3件に制限
                 if (autoItems.length >= 3) {
                     const oldestAutoIdx = hist.findIndex(h => h.method === 'enter');
                     if (oldestAutoIdx !== -1) hist.splice(oldestAutoIdx, 1);
@@ -667,7 +666,7 @@
         dInputA.onkeydown = e => { if(e.key === "Enter") { autoCalculateDist(); dInputB.focus(); } };
 
         [eSize, cSize].forEach(el => {
-            el.onchange = () => { (el.id.startsWith('e') ? calcElbow() : calcCheese()); setTimeout(() => (el.id.startsWith('e')?eInput:cInput).focus(), 100); };
+            el.onchange = () => { (el.id.startsWith('e') ? calcElbow() : calcCheese()); };
         });
 
         eSaveBtn.onclick = () => saveToHistory('elbow', 'button');
