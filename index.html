@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KYOWA ROOF 計算ツール</title>
+    <title>T管計算ツール</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -28,6 +28,7 @@
             flex-direction: column;
             align-items: center;
             touch-action: pan-y;
+            min-height: 100vh;
         }
 
         /* タブメニュー */
@@ -49,22 +50,27 @@
             padding: 3px;
             border-radius: 12px;
             width: 95%;
-            max-width: 400px;
+            max-width: 500px;
             border: 1px solid #38383a;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05);
         }
 
         .tab-button {
             flex: 1;
-            padding: 12px;
+            padding: 10px 4px;
             border: none;
             background: transparent;
             color: #d1d1d6;
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 700;
             cursor: pointer;
             border-radius: 9px;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+        }
+
+        @media (min-width: 380px) {
+            .tab-button { font-size: 15px; padding: 12px; }
         }
 
         .tab-button.active {
@@ -84,16 +90,18 @@
             display: none; 
             flex-direction: column;
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            margin-bottom: 40px;
         }
 
         .calc-card.active { display: flex; }
 
-        /* ラベル */
+        /* ラベル（明るいグレー） */
         .label-outside {
             font-size: 15px;
             font-weight: 700;
             margin-bottom: 6px;
             margin-left: 8px;
+            color: #d1d1d6;
             transition: color 0.3s ease;
         }
 
@@ -112,13 +120,9 @@
         .input-box.h-main { height: 76px; border-radius: 22px; }
         .input-box.h-sub { height: 60px; }
 
-        /* アクセントボーダー */
-        #panel-elbow .input-box-main { border: 3px solid var(--ios-indigo); }
-        #panel-cheese .input-box-main { border: 3px solid var(--ios-blue); }
-
         .input-ios {
             width: 100%;
-            background: transparent;
+            background: transparent !important;
             border: none;
             color: #ffffff;
             font-weight: 900;
@@ -126,6 +130,7 @@
             padding: 12px;
             text-align: center;
             appearance: none;
+            -webkit-appearance: none;
         }
 
         .input-ios.is-placeholder { font-weight: 400 !important; color: #d1d1d6 !important; }
@@ -141,7 +146,10 @@
             font-weight: 900;
             color: white;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            transition: transform 0.1s;
         }
+        .result-box-ios:active { transform: scale(0.98); }
 
         .internal-label { font-size: 15px; font-weight: 700; margin-bottom: 2px; letter-spacing: 0.05em; }
         .result-value-container { display: flex; align-items: baseline; font-size: 40px; }
@@ -153,7 +161,7 @@
             background: var(--ios-orange);
             color: white;
             border-radius: 18px;
-            font-weight: 500; /* 細字(標準)に変更 */
+            font-weight: 500;
             font-size: 18px;
             transition: all 0.2s;
             margin-top: 10px;
@@ -161,7 +169,7 @@
         .btn-save-orange:active { transform: scale(0.97); }
         .btn-save-orange:disabled { background: #2c2c2e !important; color: #48484a; box-shadow: none; }
 
-        /* 履歴リスト（コンパクト化） */
+        /* 履歴リスト */
         .history-list { display: flex; flex-direction: column; gap: 4px; }
         .history-item {
             background: var(--ios-input);
@@ -186,11 +194,24 @@
         .history-result { font-size: 19px; font-weight: 900; }
         .history-delete { color: #ff453a; cursor: pointer; font-size: 28px; font-weight: bold; margin-left: 12px; padding: 0px 8px; line-height: 1; }
 
-        /* クリアボタン（円形） */
+        /* クリアボタン */
         .clear-btn-circle {
             width: 34px; height: 34px; background: #3a3a3c; color: white;
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             font-size: 20px; margin-right: 12px; cursor: pointer;
+        }
+
+        /* 3Dボタン風 */
+        .btn-3d {
+            position: relative;
+            transition: all 0.1s;
+            border-bottom: 4px solid #1a1a1a;
+            user-select: none;
+        }
+        .btn-3d:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+            margin-bottom: 2px;
         }
 
         /* 確認モーダル */
@@ -203,14 +224,24 @@
             background: #2c2c2e; border-radius: 14px; width: 100%; max-width: 270px; 
             text-align: center; overflow: hidden; border: 1px solid #444446;
         }
-        .modal-btn {
-            flex: 1; padding: 12px; font-size: 17px; border: none; background: transparent; cursor: pointer;
+        .modal-btn { flex: 1; padding: 12px; font-size: 17px; border: none; background: transparent; cursor: pointer; }
+
+        /* トースト */
+        #statusToast {
+            position: fixed; bottom: 40px; left: 1/2; transform: translateX(-50%) translateY(20px);
+            background: var(--ios-blue); color: white; px-6; py-2; rounded-full; shadow-2xl;
+            transition: all 0.3s; opacity: 0; pointer-events: none; z-index: 3000;
+            left: 50%; padding: 10px 24px; border-radius: 50px; font-weight: bold;
         }
+        #statusToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         .footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--ios-secondary); letter-spacing: 0.05em; font-weight: 600; }
     </style>
 </head>
 <body>
+
+    <!-- メッセージ通知用 -->
+    <div id="statusToast">コピーしました</div>
 
     <div id="confirmModal">
         <div class="modal-content">
@@ -229,6 +260,7 @@
         <div class="tab-container">
             <button id="tab-elbow" class="tab-button active" onclick="switchTab('elbow')">90°エルボ</button>
             <button id="tab-cheese" class="tab-button" onclick="switchTab('cheese')">変形チーズ管</button>
+            <button id="tab-dist" class="tab-button" onclick="switchTab('dist')">距離計算</button>
         </div>
     </div>
 
@@ -238,7 +270,7 @@
             <h1 class="text-2xl font-bold">90°エルボ 計算</h1>
             <p class="text-xs text-[#d1d1d6] tracking-widest mt-1 font-bold">KYOWA ROOF</p>
             <div class="mt-4">
-                <div class="result-box-ios bg-[#5e5ce6]">
+                <div class="result-box-ios bg-[#5e5ce6]" onclick="copyToClipboard('e-result')">
                     <div class="internal-label" style="color:#bfbdf3">切断寸法</div>
                     <div class="result-value-container">
                         <span id="e-result">---</span><span class="text-lg ml-2 opacity-80">mm</span>
@@ -250,8 +282,8 @@
         <div class="space-y-4">
             <div class="flex gap-3">
                 <div class="flex-1">
-                    <label class="label-outside text-[#5e5ce6]">サイズ</label>
-                    <div class="input-box h-sub">
+                    <label class="label-outside">サイズ</label>
+                    <div class="input-box h-sub" style="border: 3px solid var(--ios-indigo);">
                         <select id="e-size" class="input-ios text-2xl cursor-pointer">
                             <option value="75">75</option>
                             <option value="100" selected>100</option>
@@ -260,7 +292,7 @@
                     </div>
                 </div>
                 <div class="flex-1">
-                    <label class="label-outside text-[#5e5ce6]">重寸法</label>
+                    <label class="label-outside">重寸法</label>
                     <div class="input-box h-sub">
                         <div class="w-full text-center text-2xl font-bold text-[#aeaeb2]">
                             <span id="e-d-display">--</span><span class="text-sm ml-1">mm</span>
@@ -269,8 +301,8 @@
                 </div>
             </div>
             <div>
-                <label class="label-outside text-[#5e5ce6]">芯〜芯 (mm)</label>
-                <div class="input-box h-main input-box-main">
+                <label class="label-outside">芯〜芯 (mm)</label>
+                <div class="input-box h-main" style="border: 3px solid var(--ios-indigo);">
                     <input id="e-input" class="input-ios text-4xl" type="text" inputmode="decimal" placeholder="0">
                     <div id="e-clear" class="clear-btn-circle hidden">×</div>
                 </div>
@@ -285,7 +317,7 @@
             </div>
             <div id="e-history-list" class="history-list"></div>
         </div>
-        <div class="footer">★：ボタン保存（無制限） / 自動保存（5件）</div>
+        <div class="footer">★：ボタン保存（無制限） / 自動保存（3件）</div>
     </div>
 
     <!-- 2. 変形チーズ管 -->
@@ -294,7 +326,7 @@
             <h1 class="text-2xl font-bold">変形チーズ管</h1>
             <p class="text-xs text-[#d1d1d6] tracking-widest mt-1 font-bold">KYOWA ROOF</p>
             <div class="mt-4">
-                <div class="result-box-ios bg-[#0a84ff]">
+                <div class="result-box-ios bg-[#0a84ff]" onclick="copyToClipboard('c-result')">
                     <div class="internal-label" style="color:rgba(255,255,255,0.8)">切断寸法</div>
                     <div class="result-value-container">
                         <span id="c-result">---</span><span class="text-lg ml-2 opacity-80">mm</span>
@@ -306,8 +338,8 @@
         <div class="space-y-4">
             <div class="flex gap-3">
                 <div class="flex-1">
-                    <label class="label-outside text-[#0a84ff]">サイズ</label>
-                    <div class="input-box h-sub">
+                    <label class="label-outside">サイズ</label>
+                    <div class="input-box h-sub" style="border: 3px solid var(--ios-blue);">
                         <select id="c-size" class="input-ios cursor-pointer is-placeholder" style="font-size: 23px !important;">
                             <option value="">選択</option>
                             <option value="10075">100×75</option>
@@ -317,7 +349,7 @@
                     </div>
                 </div>
                 <div class="flex-1">
-                    <label class="label-outside text-[#0a84ff]">重寸法</label>
+                    <label class="label-outside">重寸法</label>
                     <div class="input-box h-sub">
                         <div class="w-full text-center font-bold text-[#aeaeb2]" style="font-size: 23px !important;">
                             <span id="c-c6-display">-</span><span class="text-sm ml-1">mm</span>
@@ -326,8 +358,8 @@
                 </div>
             </div>
             <div>
-                <label class="label-outside text-[#0a84ff]">芯〜芯 (mm)</label>
-                <div class="input-box h-main input-box-main">
+                <label class="label-outside">芯〜芯 (mm)</label>
+                <div class="input-box h-main" style="border: 3px solid var(--ios-blue);">
                     <input id="c-input" class="input-ios text-4xl" type="text" inputmode="decimal" placeholder="0">
                     <div id="c-clear" class="clear-btn-circle hidden">×</div>
                 </div>
@@ -342,7 +374,66 @@
             </div>
             <div id="c-history-list" class="history-list"></div>
         </div>
-        <div class="footer">★：ボタン保存（無制限） / 自動保存（5件）</div>
+        <div class="footer">★：ボタン保存（無制限） / 自動保存（3件）</div>
+    </div>
+
+    <!-- 3. 距離計算 -->
+    <div id="panel-dist" class="calc-card">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold">距離計算</h1>
+            <p class="text-xs text-[#d1d1d6] tracking-widest mt-1 font-bold">KYOWA ROOF</p>
+            <div class="mt-4">
+                <div class="result-box-ios bg-[#30d158]" onclick="copyToClipboard('d-result')">
+                    <div class="internal-label" style="color:rgba(255,255,255,0.8)">計算結果</div>
+                    <div class="result-value-container">
+                        <span id="d-result">---</span><span class="text-lg ml-2 opacity-80">mm</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="label-outside">足長</label>
+                    <div class="input-box h-sub" style="border: 3px solid var(--ios-green);">
+                        <input id="d-inputB" class="input-ios text-2xl" type="text" inputmode="numeric" placeholder="0">
+                    </div>
+                </div>
+                <div>
+                    <label class="label-outside">並行距離</label>
+                    <div class="input-box h-sub" style="border: 3px solid var(--ios-green);">
+                        <input id="d-inputH" class="input-ios text-2xl" type="text" inputmode="numeric" placeholder="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div class="col-span-1">
+                    <label class="label-outside">選択</label>
+                    <div class="input-box h-sub" style="border: 3px solid var(--ios-green);">
+                        <select id="d-selectX" class="input-ios text-2xl cursor-pointer">
+                            <option value="45">75</option>
+                            <option value="57">100</option>
+                            <option value="70">125</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-span-2">
+                    <label class="label-outside">寸法</label>
+                    <div class="input-box h-sub" style="border: 3px solid var(--ios-green);">
+                        <input id="d-inputA" class="input-ios text-2xl" type="text" inputmode="numeric" placeholder="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center mt-4">
+                <button id="d-clear" class="btn-3d w-1/2 bg-gray-600 border-gray-900 text-gray-200 font-bold py-3 rounded-xl text-lg">
+                    クリア
+                </button>
+            </div>
+        </div>
+        <div class="footer">結果をタップしてコピー</div>
     </div>
 
     <script>
@@ -351,6 +442,7 @@
         let eHistories = JSON.parse(localStorage.getItem(eStorageKey)) || [];
         let cHistories = JSON.parse(localStorage.getItem(cStorageKey)) || [];
         let currentTabType = 'elbow';
+        const tabList = ['elbow', 'cheese', 'dist'];
         let lastSavedTS = 0;
 
         // タブ切り替え
@@ -361,18 +453,25 @@
             document.getElementById(`panel-${type}`).classList.add('active');
             document.getElementById(`tab-${type}`).classList.add('active');
             window.scrollTo(0, 0);
+            
+            // フォーカス移動
+            if (type === 'elbow') document.getElementById('e-input').focus();
+            if (type === 'cheese') document.getElementById('c-input').focus();
+            if (type === 'dist') document.getElementById('d-inputB').focus();
         }
 
-        // スワイプ
+        // スワイプ（3タブ対応）
         let startX = 0, startY = 0;
         window.addEventListener('touchstart', e => { startX = e.touches[0].screenX; startY = e.touches[0].screenY; }, {passive:true});
         window.addEventListener('touchend', e => {
             const diffX = startX - e.changedTouches[0].screenX;
             const diffY = Math.abs(startY - e.changedTouches[0].screenY);
             if (diffY > 60 || Math.abs(diffX) < 80) return;
-            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') return;
-            if (diffX > 0 && currentTabType === 'elbow') switchTab('cheese');
-            else if (diffX < 0 && currentTabType === 'cheese') switchTab('elbow');
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+            
+            const currentIndex = tabList.indexOf(currentTabType);
+            if (diffX > 0 && currentIndex < tabList.length - 1) switchTab(tabList[currentIndex + 1]);
+            else if (diffX < 0 && currentIndex > 0) switchTab(tabList[currentIndex - 1]);
         }, {passive:true});
 
         // モーダル
@@ -389,13 +488,33 @@
             hideConfirmModal();
         };
 
+        // ユーティリティ
         function formatNum(num) {
             if (isNaN(num) || num === null) return "---";
             const parts = num.toString().split(".");
             parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             return parts.join(".");
         }
-        function unformat(str) { return str.replace(/,/g, ""); }
+        function unformat(str) { return str.toString().replace(/,/g, ""); }
+
+        function showToast(msg) {
+            const toast = document.getElementById('statusToast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function copyToClipboard(elementId) {
+            const val = document.getElementById(elementId).innerText;
+            if (val === "---" || val === "エラー") return;
+            const temp = document.createElement('textarea');
+            temp.value = val;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast("コピーしました");
+        }
 
         // --- エルボ計算 ---
         const eData = { 75: {d:30, e:88}, 100: {d:40, e:112}, 125: {d:50, e:140} };
@@ -405,11 +524,7 @@
             const { d, e } = eData[eSize.value];
             document.getElementById('e-d-display').textContent = d;
             let val = unformat(eInput.value).replace(/[^\d.]/g, "");
-            if (val !== "") {
-                const parts = val.split(".");
-                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                eInput.value = parts.join(".");
-            }
+            if (val !== "") eInput.value = formatNum(val);
             document.getElementById('e-clear').classList.toggle('hidden', eInput.value === "");
             const c = parseFloat(val);
             if (!isNaN(c)) {
@@ -441,11 +556,7 @@
             const key = cSize.value;
             cSize.classList.toggle('is-placeholder', !key);
             let val = unformat(cInput.value).replace(/[^\d.]/g, "");
-            if (val !== "") {
-                const parts = val.split(".");
-                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                cInput.value = parts.join(".");
-            }
+            if (val !== "") cInput.value = formatNum(val);
             document.getElementById('c-clear').classList.toggle('hidden', cInput.value === "");
             if (key) {
                 const data = cData[key];
@@ -472,6 +583,43 @@
         }
         window.deleteCheeseHist = idx => { cHistories.splice(idx, 1); localStorage.setItem(cStorageKey, JSON.stringify(cHistories)); renderCheeseHist(); };
 
+        // --- 距離計算 ---
+        const dInputB = document.getElementById('d-inputB');
+        const dInputH = document.getElementById('d-inputH');
+        const dInputA = document.getElementById('d-inputA');
+        const dSelectX = document.getElementById('d-selectX');
+        const dResult = document.getElementById('d-result');
+
+        function autoCalculateDist() {
+            const hRaw = unformat(dInputH.value);
+            const bRaw = unformat(dInputB.value);
+            const aRaw = unformat(dInputA.value);
+            const xVal = parseFloat(dSelectX.value);
+
+            if (!hRaw || !bRaw || !aRaw) {
+                dResult.innerText = "---";
+                return;
+            }
+
+            const h = parseFloat(hRaw), bBase = parseFloat(bRaw), a = parseFloat(aRaw);
+            const bCalc = bBase + xVal;
+            const cSquared = (a * a) + (bCalc * bCalc) - (2 * bCalc * h);
+
+            if (cSquared < 0) {
+                dResult.innerText = "エラー";
+            } else {
+                const res = Math.ceil(Math.sqrt(cSquared));
+                dResult.innerText = formatNum(res);
+            }
+        }
+
+        function handleDistInput(e) {
+            const el = e.target;
+            let val = unformat(el.value).replace(/[^\d.]/g, "");
+            if (val !== "") el.value = formatNum(val);
+            autoCalculateDist();
+        }
+
         // 共通保存ロジック
         function saveToHistory(type, method = 'enter') {
             const now = Date.now();
@@ -485,7 +633,8 @@
 
             if (method === 'enter') {
                 const autoItems = hist.filter(h => h.method === 'enter');
-                if (autoItems.length >= 5) {
+                // 自動保存を3件に制限
+                if (autoItems.length >= 3) {
                     const oldestAutoIdx = hist.findIndex(h => h.method === 'enter');
                     if (oldestAutoIdx !== -1) hist.splice(oldestAutoIdx, 1);
                 }
@@ -506,6 +655,17 @@
             el.oninput = el.id.startsWith('e') ? calcElbow : calcCheese;
         });
 
+        [dInputB, dInputH, dInputA].forEach(el => {
+            el.addEventListener('focus', function() { setTimeout(() => this.setSelectionRange(0, 9999), 50); });
+            el.addEventListener('input', handleDistInput);
+        });
+        dSelectX.onchange = autoCalculateDist;
+
+        // エンター移動（距離計算）
+        dInputB.onkeydown = e => { if(e.key === "Enter") dInputH.focus(); };
+        dInputH.onkeydown = e => { if(e.key === "Enter") dSelectX.focus(); };
+        dInputA.onkeydown = e => { if(e.key === "Enter") { autoCalculateDist(); dInputB.focus(); } };
+
         [eSize, cSize].forEach(el => {
             el.onchange = () => { (el.id.startsWith('e') ? calcElbow() : calcCheese()); setTimeout(() => (el.id.startsWith('e')?eInput:cInput).focus(), 100); };
         });
@@ -514,6 +674,11 @@
         cSaveBtn.onclick = () => saveToHistory('cheese', 'button');
         document.getElementById('e-clear').onclick = () => { eInput.value = ""; calcElbow(); eInput.focus(); };
         document.getElementById('c-clear').onclick = () => { cInput.value = ""; calcCheese(); cInput.focus(); };
+        document.getElementById('d-clear').onclick = () => {
+            [dInputB, dInputH, dInputA].forEach(el => el.value = "");
+            dResult.innerText = "---";
+            dInputB.focus();
+        };
 
         // 外部タップでキーボードを閉じる
         document.addEventListener('touchstart', e => {
