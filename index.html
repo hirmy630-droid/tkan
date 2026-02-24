@@ -16,7 +16,7 @@
             --ios-green: #30d158;
             --ios-orange: #ff9f0a;
             --ios-secondary: #8e8e93; 
-            --accent-dist: #3b82f6;
+            --accent-dist: #30d158; /* ブルーからグリーンに変更 */
         }
 
         body {
@@ -128,7 +128,6 @@
             appearance: none;
         }
 
-        /* プレースホルダーのスタイル */
         .input-ios::placeholder {
             font-size: 15px;
             font-weight: 400;
@@ -206,7 +205,6 @@
             user-select: none;
         }
 
-        /* 距離計算用のシルバーボタン */
         .btn-silver-3d {
             background: linear-gradient(180deg, #e5e5ea 0%, #aeaeb2 100%);
             color: #3a3a3c;
@@ -219,7 +217,6 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
-        /* 標準の3Dボタン（他パネル用） */
         .btn-gray-3d {
             background: #48484a;
             color: white;
@@ -397,7 +394,7 @@
         <div class="footer">入力後に自動保存されます(3件まで)</div>
     </div>
 
-    <!-- 3. 距離計算 (エルボ距離計算の最新版を統合) -->
+    <!-- 3. 距離計算 -->
     <div id="panel-dist" class="calc-card">
         <div class="text-center mb-6">
             <h1 class="text-2xl font-bold">距離計算</h1>
@@ -450,7 +447,7 @@
                 </button>
             </div>
 
-            <!-- 図面 -->
+            <!-- 図面 (ブルーの箇所をすべてグリーンに変更) -->
             <div class="diagram-container">
                 <svg viewBox="0 0 360 210" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
                     <line x1="100" y1="10" x2="160" y2="10" stroke="white" stroke-width="2" />
@@ -460,18 +457,22 @@
                     <rect x="180" y="65" width="80" height="36" rx="8" fill="rgba(0,0,0,0.8)" stroke="white" stroke-width="1.5" />
                     <text id="dist-diagram-result" x="220" y="91" fill="white" font-size="22" font-weight="900" text-anchor="middle">---</text>
                     <circle cx="280" cy="125" r="16.2" fill="none" stroke="white" stroke-width="2" />
-                    <line x1="100" y1="10" x2="100" y2="125" stroke="#3b82f6" stroke-width="2.5" />
-                    <line x1="90" y1="10" x2="100" y2="10" stroke="#3b82f6" stroke-width="1.5" />
-                    <line x1="90" y1="125" x2="280" y2="125" stroke="#3b82f6" stroke-width="1" opacity="0.4" stroke-dasharray="3" />
-                    <line x1="95" y1="15" x2="105" y2="5" stroke="#3b82f6" stroke-width="2.5" />
-                    <line x1="95" y1="130" x2="105" y2="120" stroke="#3b82f6" stroke-width="2.5" />
-                    <text x="5" y="75" fill="#3b82f6" font-size="18" font-weight="bold">直線距離</text>
-                    <line x1="140" y1="155" x2="280" y2="155" stroke="#3b82f6" stroke-width="2.5" />
-                    <line x1="140" y1="125" x2="140" y2="165" stroke="#3b82f6" stroke-width="1" opacity="0.4" stroke-dasharray="3" />
-                    <line x1="280" y1="125" x2="280" y2="165" stroke="#3b82f6" stroke-width="1" opacity="0.4" stroke-dasharray="3" />
-                    <line x1="135" y1="160" x2="145" y2="150" stroke="#3b82f6" stroke-width="2.5" />
-                    <line x1="275" y1="160" x2="285" y2="150" stroke="#3b82f6" stroke-width="2.5" />
-                    <text x="210" y="195" fill="#3b82f6" font-size="18" font-weight="bold" text-anchor="middle">移動寸法</text>
+                    
+                    <!-- 直線距離寸法線 (グリーンに変更) -->
+                    <line x1="100" y1="10" x2="100" y2="125" stroke="#30d158" stroke-width="2.5" />
+                    <line x1="90" y1="10" x2="100" y2="10" stroke="#30d158" stroke-width="1.5" />
+                    <line x1="90" y1="125" x2="280" y2="125" stroke="#30d158" stroke-width="1" opacity="0.4" stroke-dasharray="3" />
+                    <line x1="95" y1="15" x2="105" y2="5" stroke="#30d158" stroke-width="2.5" />
+                    <line x1="95" y1="130" x2="105" y2="120" stroke="#30d158" stroke-width="2.5" />
+                    <text x="5" y="75" fill="#30d158" font-size="18" font-weight="bold">直線距離</text>
+                    
+                    <!-- 移動寸法寸法線 (グリーンに変更) -->
+                    <line x1="140" y1="155" x2="280" y2="155" stroke="#30d158" stroke-width="2.5" />
+                    <line x1="140" y1="125" x2="140" y2="165" stroke="#30d158" stroke-width="1" opacity="0.4" stroke-dasharray="3" />
+                    <line x1="280" y1="125" x2="280" y2="165" stroke="#30d158" stroke-width="1" opacity="0.4" stroke-dasharray="3" />
+                    <line x1="135" y1="160" x2="145" y2="150" stroke="#30d158" stroke-width="2.5" />
+                    <line x1="275" y1="160" x2="285" y2="150" stroke="#30d158" stroke-width="2.5" />
+                    <text x="210" y="195" fill="#30d158" font-size="18" font-weight="bold" text-anchor="middle">移動寸法</text>
                 </svg>
             </div>
         </div>
@@ -659,7 +660,7 @@
             else { cHistories = cHistories.filter(h => h.id !== id); localStorage.setItem(cStorageKey, JSON.stringify(cHistories)); renderCheeseHist(); }
         }
 
-        // 距離計算 (統合された最新ロジック)
+        // 距離計算 
         const dInputB = document.getElementById('d-inputB');
         const dInputH = document.getElementById('d-inputH');
         const dInputA = document.getElementById('d-inputA');
@@ -673,7 +674,6 @@
             const aRaw = unformat(dInputA.value);
             const xVal = parseFloat(dSelectX.value);
             
-            // 直線距離(h)と移動寸法(a)が入力されていれば計算可能にする
             if (!hRaw || !aRaw) { 
                 dResult.innerText = "---"; 
                 diagResEl.textContent = "---";
@@ -681,11 +681,10 @@
             }
             
             const h = parseFloat(hRaw);
-            const b = bRaw === "" ? 0 : parseFloat(bRaw); // 空欄なら0として扱う
+            const b = bRaw === "" ? 0 : parseFloat(bRaw); 
             const a = parseFloat(aRaw);
-            const x = xVal;
 
-            const A = h - (b + x);
+            const A = h - (b + xVal);
             const resultSq = (A * A) + (a * a);
             
             if (resultSq < 0) {
@@ -741,7 +740,7 @@
         });
         dSelectX.onchange = autoCalculateDist;
         dInputB.onkeydown = e => { if(e.key === "Enter") dInputH.focus(); };
-        dInputH.onkeydown = e => { if(e.key === "Enter") dSelectX.focus(); };
+        dInputH.onkeydown = e => { if(e.key === "Enter") dInputA.focus(); };
         dInputA.onkeydown = e => { if(e.key === "Enter") { autoCalculateDist(); dInputB.focus(); } };
 
         [eSize, cSize].forEach(el => { el.onchange = () => { (el.id.startsWith('e') ? calcElbow() : calcCheese()); }; });
