@@ -345,13 +345,14 @@
                             <option value="70">125</option>
                         </select>
                     </div>
-                    <div class="calc-cell full-width" id="cell-dist-h" onclick="focusInput('dist-input-h')">
-                        <span class="input-label-left">直線距離</span>
-                        <div id="dist-input-h" class="input-value">0</div>
+                    <!-- 直線距離と移動寸法を1行（横幅半分ずつ）にまとめました -->
+                    <div class="calc-cell" id="cell-dist-h" onclick="focusInput('dist-input-h')">
+                        <span class="input-label-left">直線</span>
+                        <div id="dist-input-h" class="input-value input-value-sm">0</div>
                     </div>
-                    <div class="calc-cell full-width" id="cell-dist-a" onclick="focusInput('dist-input-a')">
-                        <span class="input-label-left">移動寸法</span>
-                        <div id="dist-input-a" class="input-value">0</div>
+                    <div class="calc-cell" id="cell-dist-a" onclick="focusInput('dist-input-a')">
+                        <span class="input-label-left">移動</span>
+                        <div id="dist-input-a" class="input-value input-value-sm">0</div>
                     </div>
                 </div>
             </div>
@@ -361,11 +362,13 @@
                 <button class="key-btn" onclick="pressKey('7')">7</button>
                 <button class="key-btn" onclick="pressKey('8')">8</button>
                 <button class="key-btn" onclick="pressKey('9')">9</button>
+                <!-- 距離計算のときは「C」、その他は「⇦」 -->
                 <button class="key-btn gray" id="delete-btn-label" onclick="pressKey('backspace')">⇦</button>
                 
                 <button class="key-btn" onclick="pressKey('4')">4</button>
                 <button class="key-btn" onclick="pressKey('5')">5</button>
                 <button class="key-btn" onclick="pressKey('6')">6</button>
+                <!-- ACキー -->
                 <button class="key-btn gray" onclick="pressKey('clear')">AC</button>
                 
                 <button class="key-btn" onclick="pressKey('1')">1</button>
@@ -413,7 +416,7 @@
     let currentTab = '90';
     let focusedInputId = 'elbow-input-90';
     let isOverwriteMode = true;
-    const storageKey = 'kyowa_unified_calc_v38';
+    const storageKey = 'kyowa_unified_calc_v39';
     
     const inputs = {
         'elbow-input-90': '',
@@ -450,11 +453,18 @@
         let val = inputs[focusedInputId] || '';
 
         if (key === 'clear') {
+            if (currentTab === 'dist') {
+                clearDistFields(); // AC: 全入力クリア
+                return;
+            }
             val = '';
             isOverwriteMode = false;
         } else if (key === 'backspace') {
-            if (currentTab === 'dist') { clearDistFields(); return; }
-            val = val.toString().slice(0, -1);
+            if (currentTab === 'dist') {
+                val = ''; // C: 現在の入力枠だけクリア
+            } else {
+                val = val.toString().slice(0, -1); // その他は1文字消去
+            }
             isOverwriteMode = false;
         } else if (key === 'enter') {
             handleEnter(); return;
@@ -479,6 +489,7 @@
         ['dist-input-b', 'dist-input-h', 'dist-input-a'].forEach(id => { inputs[id] = ''; updateDisplay(id, ''); });
         distCalc();
         isOverwriteMode = true;
+        showToast("入力をすべてクリアしました");
     }
 
     function handleEnter() {
@@ -522,12 +533,12 @@
 
         if (tabId === 'dist') {
             enterLabel.innerText = '⏎';
-            deleteBtn.innerText = 'AC';
+            deleteBtn.innerText = 'C'; // 距離計算モードのときは「C」
             focusInput('dist-input-h');
             distCalc();
         } else {
             enterLabel.innerText = '保存';
-            deleteBtn.innerText = '⇦';
+            deleteBtn.innerText = '⇦'; // 通常モードは「⇦」
             const displayId = tabId === '90' ? 'elbow-input' : 'cheese-input';
             const internalId = tabId === '90' ? 'elbow-input-90' : 'cheese-input';
             updateDisplay(displayId, inputs[internalId]);
@@ -614,7 +625,6 @@
         if (h) { h.locked = !h.locked; localStorage.setItem(storageKey, JSON.stringify(histories)); renderHistory(); }
     }
 
-    // 個別の履歴を削除する関数
     function deleteHistoryItem(id) {
         histories = histories.filter(h => h.id !== id);
         localStorage.setItem(storageKey, JSON.stringify(histories));
@@ -639,7 +649,6 @@
                     <div class="text-[12px] font-black text-zinc-500 mb-0">${h.size} / 入力:${h.input}</div>
                     <div class="text-xl font-black">${h.result}</div>
                 </div>
-                <!-- 削除ボタン (×) -->
                 <button onclick="deleteHistoryItem(${h.id})" class="p-2 text-zinc-500">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
