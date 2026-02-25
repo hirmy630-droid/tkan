@@ -333,7 +333,7 @@
                 </div>
 
                 <div class="cell-grid">
-                    <div class="calc-cell calc-cell-sm" onclick="focusInput('dist-input-b')">
+                    <div class="calc-cell calc-cell-sm" id="cell-dist-b" onclick="focusInput('dist-input-b')">
                         <span class="input-label-left">足長</span>
                         <div id="dist-input-b" class="input-value input-value-sm">0</div>
                     </div>
@@ -345,7 +345,6 @@
                             <option value="70">125</option>
                         </select>
                     </div>
-                    <!-- 直線距離と移動寸法を1行（横幅半分ずつ）にまとめました -->
                     <div class="calc-cell" id="cell-dist-h" onclick="focusInput('dist-input-h')">
                         <span class="input-label-left">直線</span>
                         <div id="dist-input-h" class="input-value input-value-sm">0</div>
@@ -362,13 +361,11 @@
                 <button class="key-btn" onclick="pressKey('7')">7</button>
                 <button class="key-btn" onclick="pressKey('8')">8</button>
                 <button class="key-btn" onclick="pressKey('9')">9</button>
-                <!-- 距離計算のときは「C」、その他は「⇦」 -->
                 <button class="key-btn gray" id="delete-btn-label" onclick="pressKey('backspace')">⇦</button>
                 
                 <button class="key-btn" onclick="pressKey('4')">4</button>
                 <button class="key-btn" onclick="pressKey('5')">5</button>
                 <button class="key-btn" onclick="pressKey('6')">6</button>
-                <!-- ACキー -->
                 <button class="key-btn gray" onclick="pressKey('clear')">AC</button>
                 
                 <button class="key-btn" onclick="pressKey('1')">1</button>
@@ -416,7 +413,7 @@
     let currentTab = '90';
     let focusedInputId = 'elbow-input-90';
     let isOverwriteMode = true;
-    const storageKey = 'kyowa_unified_calc_v39';
+    const storageKey = 'kyowa_unified_calc_v40';
     
     const inputs = {
         'elbow-input-90': '',
@@ -454,16 +451,16 @@
 
         if (key === 'clear') {
             if (currentTab === 'dist') {
-                clearDistFields(); // AC: 全入力クリア
+                clearDistFields(); 
                 return;
             }
             val = '';
             isOverwriteMode = false;
         } else if (key === 'backspace') {
             if (currentTab === 'dist') {
-                val = ''; // C: 現在の入力枠だけクリア
+                val = ''; 
             } else {
-                val = val.toString().slice(0, -1); // その他は1文字消去
+                val = val.toString().slice(0, -1); 
             }
             isOverwriteMode = false;
         } else if (key === 'enter') {
@@ -533,12 +530,12 @@
 
         if (tabId === 'dist') {
             enterLabel.innerText = '⏎';
-            deleteBtn.innerText = 'C'; // 距離計算モードのときは「C」
+            deleteBtn.innerText = 'C'; 
             focusInput('dist-input-h');
             distCalc();
         } else {
             enterLabel.innerText = '保存';
-            deleteBtn.innerText = '⇦'; // 通常モードは「⇦」
+            deleteBtn.innerText = '⇦'; 
             const displayId = tabId === '90' ? 'elbow-input' : 'cheese-input';
             const internalId = tabId === '90' ? 'elbow-input-90' : 'cheese-input';
             updateDisplay(displayId, inputs[internalId]);
